@@ -1,0 +1,6 @@
+.build/
+dist/
+.DS_Store
+README.privado.md
+*.dmg
+.swiftpm/
