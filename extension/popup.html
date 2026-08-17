@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      margin: 0;
+      width: 320px;
+      font: 13px/1.4 -apple-system, system-ui, sans-serif;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+    }
+    header h1 { font-size: 14px; margin: 0; }
+    #tabs { padding: 6px 14px 12px; }
+    .tab { padding: 8px 0; }
+    .tab-head { display: flex; align-items: center; gap: 6px; }
+    .tab-head img { width: 16px; height: 16px; flex: none; }
+    .tab-head .title {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tab-head .pct {
+      font-variant-numeric: tabular-nums;
+      opacity: 0.6;
+      font-size: 12px;
+    }
+    .row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+    .row input[type="range"] { flex: 1; }
+    .row button {
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 13px;
+      opacity: 0.7;
+      padding: 2px;
+    }
+    .row button:disabled { opacity: 0.25; cursor: default; }
+    #empty { padding: 24px 14px; text-align: center; opacity: 0.65; }
+  </style>
+</head>
+<body>
+  <header><h1>SoundBar Tabs</h1></header>
+  <div id="tabs"></div>
+  <div id="empty" hidden></div>
+  <script src="popup.js"></script>
+</body>
+</html>
