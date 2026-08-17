@@ -71,8 +71,9 @@ private struct AppVolumeRow: View {
                 if PlaybackControl.supportsPlayPause(app.id) {
                     Button {
                         PlaybackControl.togglePlayPause(bundleID: app.id)
+                        mixer.scheduleRefresh(after: 0.7)
                     } label: {
-                        Image(systemName: "playpause.fill")
+                        Image(systemName: app.isPlaying ? "pause.fill" : "play.fill")
                             .font(.caption)
                     }
                     .buttonStyle(.plain)

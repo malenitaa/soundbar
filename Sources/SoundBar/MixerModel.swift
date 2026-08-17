@@ -8,10 +8,11 @@ struct AudioApp: Identifiable, Equatable {
     let id: String
     let name: String
     let icon: NSImage?
+    let isPlaying: Bool
     let processObjectIDs: [AudioObjectID]
 
     static func == (lhs: AudioApp, rhs: AudioApp) -> Bool {
-        lhs.id == rhs.id && lhs.processObjectIDs == rhs.processObjectIDs
+        lhs.id == rhs.id && lhs.isPlaying == rhs.isPlaying && lhs.processObjectIDs == rhs.processObjectIDs
     }
 }
 
@@ -82,9 +83,15 @@ final class MixerModel: ObservableObject {
 
     // MARK: - Discovery
 
+    func scheduleRefresh(after delay: TimeInterval) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+            self?.refresh()
+        }
+    }
+
     private func refresh() {
         let previousApps = apps
-        apps = Self.discoverAudioApps(keepingIDs: Set(taps.keys))
+        apps = discoverAudioApps()
 
         // If the set of helper processes behind a tapped app changed (a new
         // Chrome audio helper, for example), rebuild that tap so the new
@@ -138,45 +145,67 @@ final class MixerModel: ObservableObject {
         return responsible > 0 ? responsible : pid
     }
 
-    /// Lists apps currently emitting audio, grouped so that helper processes
-    /// (like Chrome's audio service) collapse into their parent app.
-    private static func discoverAudioApps(keepingIDs: Set<String>) -> [AudioApp] {
+    /// Paused apps stay listed this long (while their process lives), so
+    /// pausing Spotify doesn't make its slider vanish from the panel.
+    private static let lingerInterval: TimeInterval = 30 * 60
+    private var lastPlayed: [String: Date] = [:]
+
+    /// Lists apps emitting (or recently emitting) audio, grouped so that
+    /// helper processes (like Chrome's audio service) collapse into their
+    /// parent app.
+    private func discoverAudioApps() -> [AudioApp] {
         let processObjects = SystemAudio.objectList(
             AudioObjectID(kAudioObjectSystemObject),
             kAudioHardwarePropertyProcessObjectList
         )
         let ownPID = ProcessInfo.processInfo.processIdentifier
+        let tappedIDs = Set(taps.keys)
 
-        var groups: [String: [AudioObjectID]] = [:]
-        var groupPIDs: [String: pid_t] = [:]
+        struct Group {
+            var objects: [AudioObjectID] = []
+            var isPlaying = false
+            var pid: pid_t
+        }
+        var groups: [String: Group] = [:]
 
         for object in processObjects {
             guard let pid = SystemAudio.pid(object, kAudioProcessPropertyPID) else { continue }
-            let responsible = responsiblePID(for: pid)
+            let responsible = Self.responsiblePID(for: pid)
 
             // Never list ourselves: our replay of tapped audio registers as
             // SoundBar output, and tapping it would silence everything.
             guard pid != ownPID, responsible != ownPID else { continue }
 
-            let isPlaying = SystemAudio.uint32(object, kAudioProcessPropertyIsRunningOutput) == 1
             let bundleID = SystemAudio.string(object, kAudioProcessPropertyBundleID) ?? ""
             let rootID = NSRunningApplication(processIdentifier: responsible)?.bundleIdentifier
-                ?? rootBundleID(bundleID)
-
-            // Keep tapped apps in the list even while momentarily silent, so
-            // their slider doesn't vanish mid-adjustment.
-            guard isPlaying || (!rootID.isEmpty && keepingIDs.contains(rootID)) else { continue }
-
+                ?? Self.rootBundleID(bundleID)
             let key = rootID.isEmpty ? "pid.\(responsible)" : rootID
-            groups[key, default: []].append(object)
-            if groupPIDs[key] == nil {
-                groupPIDs[key] = responsible
-            }
+
+            var group = groups[key] ?? Group(pid: responsible)
+            group.objects.append(object)
+            group.isPlaying = group.isPlaying
+                || SystemAudio.uint32(object, kAudioProcessPropertyIsRunningOutput) == 1
+            groups[key] = group
         }
 
-        return groups.map { key, objects in
-            let (name, icon) = displayInfo(bundleID: key, pid: groupPIDs[key])
-            return AudioApp(id: key, name: name, icon: icon, processObjectIDs: objects.sorted())
+        let now = Date()
+        for (key, group) in groups where group.isPlaying {
+            lastPlayed[key] = now
+        }
+        // Forget apps whose audio processes disappeared entirely (app quit).
+        lastPlayed = lastPlayed.filter { groups[$0.key] != nil }
+
+        return groups.compactMap { key, group -> AudioApp? in
+            let lingering = lastPlayed[key].map { now.timeIntervalSince($0) < Self.lingerInterval } ?? false
+            guard group.isPlaying || lingering || tappedIDs.contains(key) else { return nil }
+            let (name, icon) = Self.displayInfo(bundleID: key, pid: group.pid)
+            return AudioApp(
+                id: key,
+                name: name,
+                icon: icon,
+                isPlaying: group.isPlaying,
+                processObjectIDs: group.objects.sorted()
+            )
         }
         .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
