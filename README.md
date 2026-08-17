@@ -1,22 +1,43 @@
 # SoundBar
 
-**Per-app volume mixer for macOS, right in your menu bar.**
+**Your Mac has one volume for everything. SoundBar gives every app — and every browser tab — its own.**
 
-macOS has one master volume for everything. If you're on a Meet call and want quiet background music, your only option is digging into each app's own volume control — if it has one. Windows solved this years ago with its volume mixer; SoundBar brings the same idea to the Mac.
+On a call while music plays in the background? On Windows you'd open the volume mixer. On a Mac, there isn't one: your only option is hunting through each app's own settings. SoundBar fixes that with two small tools:
 
-- 🎚️ One slider per app that's currently playing audio
-- 🪶 No drivers, no kernel extensions, nothing to uninstall later — built on Apple's official [Core Audio process tap API](https://developer.apple.com/documentation/coreaudio/capturing-system-audio-with-core-audio-taps)
-- 🔒 Audio is processed in memory on its way to your speakers, never recorded or stored, and the app makes zero network requests
-- 🌐 UI in English and Spanish (follows your system language)
-- 🧩 Includes a companion Chrome extension for **per-tab** volume
+- **SoundBar** (macOS menu bar app) — a slider for every app that's playing sound. Lower Spotify to 30% while your Meet call stays at 100%. Tap the speaker to mute an app entirely; Spotify, Apple Music and Apple TV also get a play/pause button.
+- **SoundBar Tabs** (browser extension for Chrome, Brave and Edge) — the same idea inside your browser, where macOS can't see individual tabs. Volume, mute and pause for each tab that's playing audio.
 
-## Requirements
+No drivers. No kernel extensions. Nothing running that you can't quit from the menu bar, and nothing left behind if you delete it.
 
-macOS 14.4 (Sonoma) or later.
+## Get the Mac app
 
-## Install
+1. Download `SoundBar.dmg` from the [latest release](https://github.com/malenitaa/soundbar/releases) (works on Apple Silicon and Intel, macOS 14.4+).
+2. Open it and drag SoundBar to Applications.
+3. First launch: right-click the app → **Open** (it's not notarized with Apple — it's a free open-source app).
+4. The first time you lower a slider, macOS asks permission to "record system audio". That's Apple's official mechanism for adjusting other apps' audio — **nothing is recorded or stored**, and SoundBar makes zero network requests. The code is public, so you don't have to take our word for it.
 
-Build from source (takes under a minute):
+Click the sliders icon in your menu bar and you're mixing.
+
+## Get the browser extension
+
+Until it lands on the Chrome Web Store, load it straight from this repo:
+
+1. Download this repository (green **Code** button → Download ZIP) and unzip it.
+2. Open `chrome://extensions` (or `brave://extensions`), enable **Developer mode**.
+3. Click **Load unpacked** and choose the `extension/` folder.
+
+Click the extension icon to see every tab that's playing audio, each with its own slider, mute and play/pause. Paused tabs stay in the list so you can bring them back.
+
+## Good to know
+
+- **Volume goes down, not up.** SoundBar attenuates; it won't boost past 100% or distort your audio.
+- **Setting a slider back to 100% steps SoundBar out of the way completely** — audio flows directly from the app to your speakers again.
+- **Why can't the Mac app separate browser tabs?** macOS sees a browser as a single audio source. That's exactly what SoundBar Tabs is for.
+- **Privacy:** no accounts, no analytics, no network requests, in the app or the extension ([extension privacy policy](extension/PRIVACY.md)).
+
+## For developers
+
+Built in Swift on Apple's official [Core Audio process tap API](https://developer.apple.com/documentation/coreaudio/capturing-system-audio-with-core-audio-taps) (macOS 14+): lowering a slider creates a tap that mutes the app's direct output and replays its audio at your chosen gain, in one realtime callback. Restoring 100% destroys the tap. The extension is vanilla Manifest V3, no build step.
 
 ```bash
 git clone https://github.com/malenitaa/soundbar.git
@@ -25,33 +46,7 @@ cd soundbar
 open dist/SoundBar.app
 ```
 
-Or grab `SoundBar.dmg` from [Releases](https://github.com/malenitaa/soundbar/releases).
-
-The first time you lower an app's volume, macOS will ask for permission to capture system audio — that's the official API at work, and it's the only permission SoundBar needs.
-
-## Per-tab volume (Chrome extension)
-
-macOS sees your whole browser as a single audio source, so no native app can tell a Meet tab from a YouTube tab. The `extension/` folder ships a tiny Chrome extension that closes that gap: it lists the tabs currently playing audio and gives each one a volume slider.
-
-To install it:
-
-1. Open `chrome://extensions`
-2. Enable **Developer mode** (top right)
-3. Click **Load unpacked** and pick the `extension/` folder
-
-It needs no build step and makes no network requests either.
-
-## How it works
-
-SoundBar watches Core Audio's process list for apps that are emitting sound. When you lower an app's slider, it creates a *process tap* for that app: the app's direct output is muted, its audio is captured, scaled by your chosen gain, and played through your output device — all inside one realtime callback, with no audible latency. Sliding back to 100% destroys the tap and the app talks to your speakers directly again, as if SoundBar had never been there.
-
-This is the same mechanism Apple introduced in macOS 14 for screen recorders to capture app audio. Older tools in this space (like the now-abandoned Background Music) had to install a virtual audio driver system-wide; SoundBar leaves your audio stack untouched.
-
-## Limitations
-
-- Volume can be lowered per app, not boosted past 100% — by design, to keep the signal clean.
-- Browser tabs share one slider at the OS level (that's what the Chrome extension is for).
-- The tab extension controls standard `<audio>`/`<video>` playback, which covers YouTube, Meet, Spotify Web and most sites, but not the rare player built purely on Web Audio.
+Issues and PRs welcome.
 
 ## Enjoyed it?
 
