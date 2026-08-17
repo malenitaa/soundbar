@@ -2,6 +2,10 @@
 
 **Your Mac has one volume for everything. SoundBar gives every app — and every browser tab — its own.**
 
+<p align="center">
+  <img src="store/promo-marquee.png" alt="SoundBar Tabs — one volume per tab, not per browser" width="700">
+</p>
+
 On a call while music plays in the background? On Windows you'd open the volume mixer. On a Mac, there isn't one: your only option is hunting through each app's own settings. SoundBar fixes that with two small tools:
 
 - **SoundBar** (macOS menu bar app) — a slider for every app that's playing sound. Lower Spotify to 30% while your Meet call stays at 100%. Tap the speaker to mute an app entirely; Spotify, Apple Music and Apple TV also get a play/pause button.
@@ -11,6 +15,10 @@ No drivers. No kernel extensions. Nothing running that you can't quit from the m
 
 ## Get the Mac app
 
+<p align="center">
+  <img src="docs/app-panel.png" alt="SoundBar menu bar panel with one volume slider per app" width="480">
+</p>
+
 1. Download `SoundBar.dmg` from the [latest release](https://github.com/malenitaa/soundbar/releases) (works on Apple Silicon and Intel, macOS 14.4+).
 2. Open it and drag SoundBar to Applications.
 3. First launch: right-click the app → **Open** (it's not notarized with Apple — it's a free open-source app).
@@ -19,6 +27,10 @@ No drivers. No kernel extensions. Nothing running that you can't quit from the m
 Click the sliders icon in your menu bar and you're mixing.
 
 ## Get the browser extension
+
+<p align="center">
+  <img src="docs/tabs-popup.png" alt="SoundBar Tabs popup with volume, mute and play/pause per tab" width="480">
+</p>
 
 Until it lands on the Chrome Web Store, load it straight from this repo:
 
