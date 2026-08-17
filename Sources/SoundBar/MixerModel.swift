@@ -108,6 +108,22 @@ final class MixerModel: ObservableObject {
         }
     }
 
+    /// Resolves a helper process (like Safari's shared "Graphics and Media"
+    /// WebKit process) to the app the user actually recognizes. The symbol is
+    /// private but long-stable; when unavailable we fall back to the helper's
+    /// own pid and the bundle-suffix heuristic.
+    private static let responsibilityFunction: (@convention(c) (pid_t) -> pid_t)? = {
+        guard let handle = dlopen(nil, RTLD_NOW),
+              let symbol = dlsym(handle, "responsibility_get_pid_responsible_for_pid") else { return nil }
+        return unsafeBitCast(symbol, to: (@convention(c) (pid_t) -> pid_t).self)
+    }()
+
+    private static func responsiblePID(for pid: pid_t) -> pid_t {
+        guard let function = responsibilityFunction else { return pid }
+        let responsible = function(pid)
+        return responsible > 0 ? responsible : pid
+    }
+
     /// Lists apps currently emitting audio, grouped so that helper processes
     /// (like Chrome's audio service) collapse into their parent app.
     private static func discoverAudioApps(keepingIDs: Set<String>) -> [AudioApp] {
@@ -115,23 +131,32 @@ final class MixerModel: ObservableObject {
             AudioObjectID(kAudioObjectSystemObject),
             kAudioHardwarePropertyProcessObjectList
         )
+        let ownPID = ProcessInfo.processInfo.processIdentifier
 
         var groups: [String: [AudioObjectID]] = [:]
         var groupPIDs: [String: pid_t] = [:]
 
         for object in processObjects {
+            guard let pid = SystemAudio.pid(object, kAudioProcessPropertyPID) else { continue }
+            let responsible = responsiblePID(for: pid)
+
+            // Never list ourselves: our replay of tapped audio registers as
+            // SoundBar output, and tapping it would silence everything.
+            guard pid != ownPID, responsible != ownPID else { continue }
+
             let isPlaying = SystemAudio.uint32(object, kAudioProcessPropertyIsRunningOutput) == 1
             let bundleID = SystemAudio.string(object, kAudioProcessPropertyBundleID) ?? ""
-            let rootID = rootBundleID(bundleID)
+            let rootID = NSRunningApplication(processIdentifier: responsible)?.bundleIdentifier
+                ?? rootBundleID(bundleID)
 
             // Keep tapped apps in the list even while momentarily silent, so
             // their slider doesn't vanish mid-adjustment.
             guard isPlaying || (!rootID.isEmpty && keepingIDs.contains(rootID)) else { continue }
 
-            let key = rootID.isEmpty ? "pid.\(SystemAudio.pid(object, kAudioProcessPropertyPID) ?? 0)" : rootID
+            let key = rootID.isEmpty ? "pid.\(responsible)" : rootID
             groups[key, default: []].append(object)
             if groupPIDs[key] == nil {
-                groupPIDs[key] = SystemAudio.pid(object, kAudioProcessPropertyPID)
+                groupPIDs[key] = responsible
             }
         }
 
