@@ -34,15 +34,17 @@
     }
     .row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
     .row input[type="range"] { flex: 1; }
-    .row button {
+    .row button, .tab-head button {
       border: none;
       background: none;
       cursor: pointer;
       font-size: 13px;
       opacity: 0.7;
       padding: 2px;
+      flex: none;
     }
     .row button:disabled { opacity: 0.25; cursor: default; }
+    .row button.active { opacity: 1; }
     #empty { padding: 24px 14px; text-align: center; opacity: 0.65; }
   </style>
 </head>
