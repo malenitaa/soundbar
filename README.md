@@ -70,3 +70,7 @@ If this was useful and you'd like to support the project:
 ## License
 
 [MIT](LICENSE)
+
+---
+
+<p align="center"><sub>Made by <a href="https://github.com/malenitaa">malenitaa</a> 🎧</sub></p>
