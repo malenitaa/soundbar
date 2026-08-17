@@ -1,8 +1,11 @@
 {
   "manifest_version": 3,
   "name": "SoundBar Tabs",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Per-tab volume, mute and pause. Lower YouTube without touching your Meet call.",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+  },
   "permissions": ["tabs", "scripting", "storage"],
   "host_permissions": ["<all_urls>"],
   "action": {

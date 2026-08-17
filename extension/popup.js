@@ -31,7 +31,9 @@ async function setState(tabId, patch) {
 // Web Audio-based players are out of reach from here, but the big ones
 // (YouTube, Meet, Spotify Web) all use media elements for output.
 function applyVolume(volume) {
-  window.__soundbarVolume = volume;
+  // Clamp defensively: el.volume throws outside [0, 1], and this value has
+  // crossed a serialization boundary.
+  window.__soundbarVolume = Math.min(1, Math.max(0, Number(volume) || 0));
   const apply = () => {
     document.querySelectorAll("audio, video").forEach((el) => {
       el.volume = window.__soundbarVolume;
@@ -104,7 +106,7 @@ async function render(list, tab) {
 
   const head = document.createElement("div");
   head.className = "tab-head";
-  if (tab.favIconUrl && tab.favIconUrl.startsWith("http")) {
+  if (tab.favIconUrl && tab.favIconUrl.startsWith("https://")) {
     const img = document.createElement("img");
     img.src = tab.favIconUrl;
     head.appendChild(img);

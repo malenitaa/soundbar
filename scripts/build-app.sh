@@ -19,5 +19,7 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp scripts/Info.plist "$APP/Contents/Info.plist"
 cp "$BIN_PATH" "$APP/Contents/MacOS/SoundBar"
 
-codesign --force --sign - "$APP"
+# Hardened runtime: blocks code injection (DYLD insertion, debugger attach)
+# and unsigned library loading into an app that holds an audio permission.
+codesign --force --options runtime --sign - "$APP"
 echo "Built $APP"
