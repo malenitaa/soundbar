@@ -64,7 +64,20 @@ final class MixerModel: ObservableObject {
     }
 
     func reset(_ app: AudioApp) {
+        preMuteVolumes.removeValue(forKey: app.id)
         setVolume(1.0, for: app)
+    }
+
+    private var preMuteVolumes: [String: Float] = [:]
+
+    func toggleMute(for app: AudioApp) {
+        let current = volume(for: app)
+        if current > 0 {
+            preMuteVolumes[app.id] = current
+            setVolume(0, for: app)
+        } else {
+            setVolume(preMuteVolumes.removeValue(forKey: app.id) ?? 1.0, for: app)
+        }
     }
 
     // MARK: - Discovery
@@ -89,6 +102,7 @@ final class MixerModel: ObservableObject {
             tap.invalidate()
             taps.removeValue(forKey: id)
             volumes.removeValue(forKey: id)
+            preMuteVolumes.removeValue(forKey: id)
         }
     }
 

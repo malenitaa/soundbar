@@ -68,6 +68,17 @@ private struct AppVolumeRow: View {
                 Text(app.name)
                     .font(.callout)
                     .lineLimit(1)
+                if PlaybackControl.supportsPlayPause(app.id) {
+                    Button {
+                        PlaybackControl.togglePlayPause(bundleID: app.id)
+                    } label: {
+                        Image(systemName: "playpause.fill")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+                    .help(L10n.playPause)
+                }
                 Spacer()
                 Text("\(Int(round(volume * 100)))%")
                     .font(.caption.monospacedDigit())
@@ -75,10 +86,16 @@ private struct AppVolumeRow: View {
             }
 
             HStack(spacing: 8) {
-                Image(systemName: volume == 0 ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .frame(width: 14)
+                Button {
+                    mixer.toggleMute(for: app)
+                } label: {
+                    Image(systemName: volume == 0 ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                        .font(.caption)
+                        .frame(width: 14)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(volume == 0 ? Color.accentColor : Color.secondary)
+                .help(volume == 0 ? L10n.unmute : L10n.mute)
                 Slider(
                     value: Binding(
                         get: { mixer.volume(for: app) },

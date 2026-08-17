@@ -17,6 +17,9 @@ enum L10n {
     }
 
     static var reset: String { spanish ? "Restablecer" : "Reset" }
+    static var mute: String { spanish ? "Silenciar" : "Mute" }
+    static var unmute: String { spanish ? "Reactivar sonido" : "Unmute" }
+    static var playPause: String { spanish ? "Reproducir/Pausar" : "Play/Pause" }
     static var quit: String { spanish ? "Salir de SoundBar" : "Quit SoundBar" }
 
     static func volumeLabel(for name: String) -> String {

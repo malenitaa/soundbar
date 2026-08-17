@@ -24,5 +24,7 @@
 	<true/>
 	<key>NSAudioCaptureUsageDescription</key>
 	<string>SoundBar adjusts each app's volume by processing its audio on the way to your speakers. Audio is never recorded or stored.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>SoundBar uses Apple events to play/pause music apps like Spotify and Apple Music.</string>
 </dict>
 </plist>
