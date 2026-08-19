@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/icon.png" width="120" alt="">
+</p>
+
 <h1 align="center">SoundBar</h1>
 
 <p align="center">
