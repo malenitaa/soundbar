@@ -1,8 +1,20 @@
 import AppKit
 import SwiftUI
 
+/// The panel's finish: the system's translucent glass material, or an
+/// opaque background for people who find text on glass hard to read.
+enum PanelStyle: String {
+    case glass
+    case solid
+}
+
 struct MixerView: View {
     @EnvironmentObject private var mixer: MixerModel
+    @AppStorage("panelStyle") private var panelStyleRaw = PanelStyle.glass.rawValue
+
+    private var panelStyle: PanelStyle {
+        PanelStyle(rawValue: panelStyleRaw) ?? .glass
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -10,6 +22,14 @@ struct MixerView: View {
                 Text("SoundBar")
                     .font(.headline)
                 Spacer()
+                Button {
+                    panelStyleRaw = (panelStyle == .glass ? PanelStyle.solid : .glass).rawValue
+                } label: {
+                    Image(systemName: panelStyle == .glass ? "circle.bottomhalf.filled" : "circle.fill")
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .help(panelStyle == .glass ? L10n.switchToSolid : L10n.switchToGlass)
                 Button {
                     NSApp.terminate(nil)
                 } label: {
@@ -45,6 +65,11 @@ struct MixerView: View {
             }
         }
         .frame(width: 300)
+        .background {
+            if panelStyle == .solid {
+                Color(nsColor: .windowBackgroundColor).ignoresSafeArea()
+            }
+        }
     }
 }
 
