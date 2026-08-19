@@ -177,8 +177,10 @@ final class MixerModel: ObservableObject {
             guard pid != ownPID, responsible != ownPID else { continue }
 
             let bundleID = SystemAudio.string(object, kAudioProcessPropertyBundleID) ?? ""
-            let rootID = NSRunningApplication(processIdentifier: responsible)?.bundleIdentifier
-                ?? Self.rootBundleID(bundleID)
+            let rootID = Self.canonicalBundleID(
+                NSRunningApplication(processIdentifier: responsible)?.bundleIdentifier
+                    ?? Self.rootBundleID(bundleID)
+            )
             let key = rootID.isEmpty ? "pid.\(responsible)" : rootID
 
             var group = groups[key] ?? Group(pid: responsible)
@@ -210,6 +212,20 @@ final class MixerModel: ObservableObject {
         .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
+    /// Faceless daemons that carry another app's audio: the call audio the
+    /// user thinks of as FaceTime actually plays through avconferenced, and
+    /// its ringtones through callservicesd. Listing them under their own
+    /// process names means an unrecognizable slider (and two of them) for
+    /// what is one call.
+    private static let bundleAliases: [String: String] = [
+        "com.apple.avconferenced": "com.apple.FaceTime",
+        "com.apple.TelephonyUtilities": "com.apple.FaceTime",
+    ]
+
+    private static func canonicalBundleID(_ bundleID: String) -> String {
+        bundleAliases[bundleID] ?? bundleID
+    }
+
     /// com.google.Chrome.helper → com.google.Chrome, so all of an app's
     /// helpers share one slider.
     private static func rootBundleID(_ bundleID: String) -> String {
@@ -231,10 +247,26 @@ final class MixerModel: ObservableObject {
         }) {
             return (app.localizedName ?? bundleID, app.icon)
         }
+        // Before falling back to the pid: an aliased bundle ID names an app
+        // that may not be running (FaceTime's window can be closed while the
+        // call keeps playing), and the pid would name the daemon instead.
+        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) {
+            return (Self.appName(at: url), NSWorkspace.shared.icon(forFile: url.path))
+        }
         if let pid, let app = NSRunningApplication(processIdentifier: pid) {
             return (app.localizedName ?? bundleID, app.icon)
         }
         let fallback = bundleID.split(separator: ".").last.map(String.init) ?? bundleID
         return (fallback, nil)
+    }
+
+    /// The name an app shows in the Finder, in the user's language when the
+    /// bundle is localized (FaceTime, System Settings, Fotos).
+    private static func appName(at url: URL) -> String {
+        let bundle = Bundle(url: url)
+        return bundle?.localizedInfoDictionary?["CFBundleDisplayName"] as? String
+            ?? bundle?.infoDictionary?["CFBundleDisplayName"] as? String
+            ?? bundle?.infoDictionary?["CFBundleName"] as? String
+            ?? url.deletingPathExtension().lastPathComponent
     }
 }
