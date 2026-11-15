@@ -222,13 +222,13 @@ final class MixerModel: ObservableObject {
         "com.apple.TelephonyUtilities": "com.apple.FaceTime",
     ]
 
-    private static func canonicalBundleID(_ bundleID: String) -> String {
+    static func canonicalBundleID(_ bundleID: String) -> String {
         bundleAliases[bundleID] ?? bundleID
     }
 
     /// com.google.Chrome.helper → com.google.Chrome, so all of an app's
     /// helpers share one slider.
-    private static func rootBundleID(_ bundleID: String) -> String {
+    static func rootBundleID(_ bundleID: String) -> String {
         var id = bundleID
         for suffix in [".helper", ".Helper", ".helper.plugin"] where id.hasSuffix(suffix) {
             id = String(id.dropLast(suffix.count))

@@ -4,3 +4,4 @@ dist/
 README.privado.md
 *.dmg
 .swiftpm/
+docs/interno/
