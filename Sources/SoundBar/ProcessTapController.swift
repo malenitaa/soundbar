@@ -1,4 +1,3 @@
-import Accelerate
 import AudioToolbox
 import CoreAudio
 import Foundation
@@ -87,32 +86,11 @@ final class ProcessTapController {
 
         let gainPointer = gainStorage
         status = AudioDeviceCreateIOProcIDWithBlock(&ioProcID, aggregateID, nil) { _, inputData, _, outputData, _ in
-            let inputBuffers = UnsafeMutableAudioBufferListPointer(UnsafeMutablePointer(mutating: inputData))
-            let outputBuffers = UnsafeMutableAudioBufferListPointer(outputData)
-            var gainValue = gainPointer.pointee
-
-            for index in 0..<outputBuffers.count {
-                let outputBuffer = outputBuffers[index]
-                guard let outputPointer = outputBuffer.mData else { continue }
-
-                guard index < inputBuffers.count,
-                      let inputPointer = inputBuffers[index].mData else {
-                    memset(outputPointer, 0, Int(outputBuffer.mDataByteSize))
-                    continue
-                }
-
-                let byteCount = min(inputBuffers[index].mDataByteSize, outputBuffer.mDataByteSize)
-                let sampleCount = Int(byteCount) / MemoryLayout<Float32>.size
-                vDSP_vsmul(
-                    inputPointer.assumingMemoryBound(to: Float32.self), 1,
-                    &gainValue,
-                    outputPointer.assumingMemoryBound(to: Float32.self), 1,
-                    vDSP_Length(sampleCount)
-                )
-                if outputBuffer.mDataByteSize > byteCount {
-                    memset(outputPointer + Int(byteCount), 0, Int(outputBuffer.mDataByteSize - byteCount))
-                }
-            }
+            TapMixer.mix(
+                input: UnsafeMutableAudioBufferListPointer(UnsafeMutablePointer(mutating: inputData)),
+                output: UnsafeMutableAudioBufferListPointer(outputData),
+                gain: gainPointer.pointee
+            )
         }
         guard status == noErr, ioProcID != nil else {
             throw SoundBarError.osStatus("AudioDeviceCreateIOProcIDWithBlock", status)

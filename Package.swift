@@ -8,6 +8,11 @@ let package = Package(
         .executableTarget(
             name: "SoundBar",
             path: "Sources/SoundBar"
-        )
+        ),
+        .testTarget(
+            name: "SoundBarTests",
+            dependencies: ["SoundBar"],
+            path: "Tests/SoundBarTests"
+        ),
     ]
 )
