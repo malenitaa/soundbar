@@ -27,13 +27,13 @@ Tests: `swift test` → 37 passed; `node --test test/extension/popup.test.js` �
 **Where:** `SECURITY.md` ("No microphone"), `Sources/SoundBar/ProcessTapController.swift` (the aggregate includes the whole output device), `Sources/SoundBar/TapMixer.swift` · **Status:** public text corrected; code change pending (issue)
 **Evidence:** spike #1 measured the aggregate's input on an output device that has inputs: `[(1 ch) device input, (2 ch) tap]`. Up to v0.2.0 the IOProc copied input 0 to output 0, which is the device's input. Fixed on `main` by PR #3 (the tap is the last buffer, the rest is discarded). But the device's input streams are still part of the aggregate.
 **Risk:** with a headset or an interface as the output, its mic may be *opened* while a slider is below 100 % (orange indicator; Bluetooth headsets switching to call mode), even though it's no longer played. Not verified on a real headset. In v0.2.0 (the current release) the old IOProc could replay it. Not verified either: the hardened-runtime build has no audio-input entitlement, so it may receive silence.
-**Fix:** SECURITY.md now says exactly that. Turning those streams off with `kAudioDevicePropertyIOProcStreamUsage` and checking on a real headset is an issue, and v0.2.1 should ship PR #3.
+**Fix:** SECURITY.md now says exactly that. Turning those streams off with `kAudioDevicePropertyIOProcStreamUsage` and checking on a real headset is #5; releasing PR #3 as v0.2.1 is #10.
 
 ### [M2] The popup loaded page-chosen favicon URLs (network requests)
 **Where:** `extension/popup.js` (`render`), `extension/manifest.json` · **Status:** fixed (extension 0.2.2)
 **Evidence:** `img.src = tab.favIconUrl` for any `https://` URL. The CSP had no `img-src`. That contradicted PRIVACY.md ("no network requests"), SECURITY.md and the store listing.
 **Risk:** a page can set its icon to `https://tracker/x?id=…` and learn when the popup is opened. It was also a false statement in the store privacy policy.
-**Fix:** icons come from the browser's local cache (`favicon` permission, `chrome-extension://<id>/_favicon/?pageUrl=…`). The CSP adds `img-src 'self'; connect-src 'none'; font-src 'none'; media-src 'none'`. **Test:** `popup.test.js`, "favicon: sale del caché local del navegador…". **Not verified in a real browser.**
+**Fix:** icons come from the browser's local cache (`favicon` permission, `chrome-extension://<id>/_favicon/?pageUrl=…`). The CSP adds `img-src 'self'; connect-src 'none'; font-src 'none'; media-src 'none'`. **Test:** `popup.test.js`, "favicon: sale del caché local del navegador…". **Not verified in a real browser** (#11).
 
 ### [M3] Extension permissions weren't minimal, and SECURITY.md omitted the broadest one
 **Where:** `extension/manifest.json`, `SECURITY.md`, `store/listing.md` · **Status:** fixed (0.2.2)
@@ -41,17 +41,17 @@ Tests: `swift test` → 37 passed; `node --test test/extension/popup.test.js` �
 **Fix:** `tabs` removed. With the host permission the extension already sees the title and URL of audible tabs, and `tabs.query({audible})`, `tabs.get` and `tabs.update({muted})` don't need it. SECURITY.md and the listing now name `<all_urls>`. **Not verified in a real browser** (inferred from Chrome's documentation).
 
 ### [L1] Code runs in the page's MAIN world
-**Where:** `extension/popup.js` (`runInTab`, `world: "MAIN"`, `allFrames: true`) · **Status:** open (issue)
+**Where:** `extension/popup.js` (`runInTab`, `world: "MAIN"`, `allFrames: true`) · **Status:** open (#6)
 **Risk:** a page (or a third-party iframe) can read `window.__soundbarVolume`, pre-set `__soundbarObserver` to disable the observer, or fake the popup's playing state. Arguments are a number and results are compared with `=== true`, so nothing escalates.
 **Fix:** `world: "ISOLATED"`. Media elements are shared between worlds. It needs testing on YouTube, Meet and Spotify Web.
 
 ### [L2] Code is injected when the popup opens, including into tabs that navigated elsewhere
-**Where:** `extension/popup.js` (`render` → `isAnyMediaPlaying`; `init` re-lists the tabs saved in storage) · **Status:** text corrected; code pending (issue)
+**Where:** `extension/popup.js` (`render` → `isAnyMediaPlaying`; `init` re-lists the tabs saved in storage) · **Status:** text corrected; code pending (#7)
 **Risk:** state is stored per tab ID, not per origin, so a tab adjusted on one site and then moved to another still gets the read-only `isAnyMediaPlaying` injected.
 **Fix:** SECURITY.md and the listing now say "when the popup opens and when you click". The issue is to store the origin with the state and drop it when the origin changes.
 
 ### [L3] Distribution: no published checksums, no DMG script, unpacked extension from `main`
-**Where:** `INSTALL.md`, `scripts/` · **Status:** open (issue)
+**Where:** `INSTALL.md`, `scripts/` · **Status:** open (#8)
 **Fix:** publish the SHA-256 with each release and in INSTALL.md; commit `scripts/build-dmg.sh`; attach the extension ZIP to a tagged release and point INSTALL.md at it.
 
 ### [L4] SECURITY.md had inaccurate facts
@@ -62,7 +62,7 @@ Tests: `swift test` → 37 passed; `node --test test/extension/popup.test.js` �
 **Where:** `Sources/SoundBar/MixerModel.swift` (`responsibilityFunction`) · **Status:** accepted (see below)
 
 ### [I1] The page's MutationObserver is never disconnected
-**Where:** `extension/popup.js` (`applyVolume`) · **Status:** open (issue, `bug`)
+**Where:** `extension/popup.js` (`applyVolume`) · **Status:** open (#9)
 After Reset to 100 %, the extension keeps forcing `el.volume = 1` on every DOM mutation, overriding the site's own volume control until reload.
 
 ### [I2] `main` isn't branch-protected · **Status:** accepted (one maintainer). Private vulnerability reporting, secret scanning and push protection are on.

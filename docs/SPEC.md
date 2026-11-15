@@ -84,10 +84,10 @@ The README frames SoundBar as the Mac's missing equivalent of the Windows volume
 | One slider per app that's playing | yes | goes |
 | Mute per app | yes | goes |
 | Boost above 100 % (Background Music) | no | not on purpose (§3) |
-| Remembers each app's level across restarts (Windows) | no | missing `[to confirm]` → issue |
-| Starts at login (Background Music) | no | missing → issue (the idea is in the private notes) |
+| Remembers each app's level across restarts (Windows) | no | missing `[to confirm]` → #13 |
+| Starts at login (Background Music) | no | missing → #12 |
 | Survives the output device changing | yes | goes |
-| Survives sleep/wake | not verified | missing check → issue |
+| Survives sleep/wake | not verified | missing check → #14 |
 | Per-app output device (Windows) | no | not on purpose `[to confirm]` |
 | "System sounds" slider (Windows) | no | out of scope for now |
 | Uninstall leaves nothing behind (Background Music left an orphaned driver) | yes: one prefs plist | goes |

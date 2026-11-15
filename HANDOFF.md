@@ -32,10 +32,10 @@ timeline
 - 18/08 · v0.2.0: panel styles, icon, INSTALL.md.
 
 ## Next
-1. Release v0.2.1 (it ships PR #3). After merging the closing PR:
+1. Release v0.2.1 (it ships PR #3) — #10. After merging the closing PR:
    `git tag -a v0.2.1 -m "v0.2.1" && git push origin v0.2.1`, then build the universal DMG (see `docs/interno/DISENO.md` §7) and `gh release create v0.2.1 --generate-notes` with the DMG and its SHA-256.
-2. Load extension 0.2.2 unpacked in Chrome and check that titles and icons still show, then send it to the Web Store.
-3. The issues opened by this review (listed in the closing PR).
+2. Load extension 0.2.2 unpacked in Chrome and check that titles and icons still show, then send it to the Web Store — #11.
+3. Parity gaps: launch at login #12, remembering levels #13, sleep/wake and unplugging #14, permission-denied hint #15.
 
 ## Decisions I made (for veto)
 - **Extension icons come from the browser's local favicon cache** (`favicon` permission) instead of the page's own icon URL, and the `tabs` permission was removed. You chose "fix now"; it's not tested in a real browser. `extension/manifest.json`, `popup.js` (`render`).
@@ -47,14 +47,14 @@ timeline
 
 ## To decide
 - `README.privado.md` was absorbed into `docs/interno/DISENO.md`. Delete the original?
-- `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md`: the README says "Issues and PRs welcome", but there are no outside contributors yet.
+- `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md`: the README says "Issues and PRs welcome", but there are no outside contributors yet — #17.
 - Move the clone out of iCloud Drive: on 15/11 iCloud had duplicated source files and git refs (`TapMixer 2.swift`, `.git/refs/heads/main 2`), which broke the build and `git log --all`.
-- Branch protection on `main` (audit I2, accepted for now).
+- Branch protection on `main` (audit I2, accepted for now) — #17.
 
 ## Pending and known debts
-- Open audit items: the mic streams in the aggregate (M1), the MAIN world (L1), injection into tabs that navigated elsewhere (L2), distribution checksums and a DMG script (L3), the observer never disconnects (I1).
-- Stereo always goes to channels 1–2, not the device's preferred pair.
-- The app doesn't detect a denied audio permission (the slider mutes instead of lowering).
+- Open audit items: the mic streams in the aggregate #5 (M1), the MAIN world #6 (L1), injection into tabs that navigated elsewhere #7 (L2), distribution checksums and a DMG script #8 (L3), the observer never disconnects #9 (I1).
+- Stereo always goes to channels 1–2, not the device's preferred pair — #16.
+- The app doesn't detect a denied audio permission (the slider mutes instead of lowering) — #15.
 - Play/pause icon lag (#4).
 - **Observability:** by design there's no telemetry or crash reporting (zero network). The only signal is GitHub issues, and local logs (`log stream --predicate 'subsystem == "com.malenitaa.soundbar"'`). Nothing to declare in SECURITY.md because nothing is sent.
 - **Deploy:** doesn't apply (desktop app and browser extension).
