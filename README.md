@@ -118,6 +118,11 @@ open dist/SoundBar.app
 
 The extension needs no build step: load `extension/` unpacked.
 
+Tests, with no dependencies: `swift test` for the app, and
+`node --test test/extension/popup.test.js` for the extension. What the app
+promises and how it's built is in [docs/SPEC.md](docs/SPEC.md) and
+[docs/adr/](docs/adr/INDICE.md).
+
 Issues and PRs welcome.
 
 ## Enjoyed it?

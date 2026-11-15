@@ -15,7 +15,10 @@ const t = {
 async function getState(tabId) {
   const key = `tab-${tabId}`;
   const stored = await chrome.storage.session.get(key);
-  return stored[key] ?? { volume: 1 };
+  const state = stored[key] ?? {};
+  // Storage is the one input the popup didn't just validate itself.
+  const volume = Number.isFinite(state.volume) ? Math.min(1, Math.max(0, state.volume)) : 1;
+  return { ...state, volume };
 }
 
 async function setState(tabId, patch) {
@@ -106,9 +109,12 @@ async function render(list, tab) {
 
   const head = document.createElement("div");
   head.className = "tab-head";
-  if (tab.favIconUrl && tab.favIconUrl.startsWith("https://")) {
+  // The browser's local favicon cache (the "favicon" permission), never the
+  // page's own icon URL: loading that would be a network request the page
+  // chooses, and could tell a tracker the popup was opened.
+  if (tab.url && /^https?:/.test(tab.url)) {
     const img = document.createElement("img");
-    img.src = tab.favIconUrl;
+    img.src = `${chrome.runtime.getURL("/_favicon/")}?pageUrl=${encodeURIComponent(tab.url)}&size=32`;
     head.appendChild(img);
   }
   const title = document.createElement("span");
@@ -133,9 +139,14 @@ async function render(list, tab) {
   const muteButton = iconButton(muted ? "🔇" : "🔊", muted ? t.unmute : t.mute);
   muteButton.classList.toggle("active", muted);
   muteButton.addEventListener("click", async () => {
-    const tabNow = await chrome.tabs.get(tab.id);
-    const newMuted = !(tabNow.mutedInfo?.muted ?? false);
-    await chrome.tabs.update(tab.id, { muted: newMuted });
+    let newMuted;
+    try {
+      const tabNow = await chrome.tabs.get(tab.id);
+      newMuted = !(tabNow.mutedInfo?.muted ?? false);
+      await chrome.tabs.update(tab.id, { muted: newMuted });
+    } catch {
+      return; // the tab was closed while the popup was open
+    }
     await setState(tab.id, {});
     muteButton.textContent = newMuted ? "🔇" : "🔊";
     muteButton.title = newMuted ? t.unmute : t.mute;

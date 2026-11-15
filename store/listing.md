@@ -76,8 +76,9 @@ barra de menú para macOS con volumen por app.
 
 ## Justificación de permisos (los pide uno por uno)
 
-- **tabs**: "Needed to list the tabs currently playing audio (title, icon,
-  audible and muted state) and to toggle native tab muting."
+- **favicon**: "Shows each audible tab's icon in the popup from the
+  browser's local icon cache, so the extension never loads an icon from the
+  network."
 - **scripting**: "Needed to adjust the volume of, and play/pause, the media
   elements of a tab when the user moves that tab's slider or presses its
   buttons."
@@ -86,8 +87,9 @@ barra de menú para macOS con volumen por app.
   leaves the device."
 - **Host permission `<all_urls>`**: "Audio can play on any website, so the
   extension must be able to adjust media volume on whichever site the user's
-  audible tabs are on. It only ever runs in response to a user action in the
-  popup."
+  audible tabs are on. It also lets the popup read the title of those tabs.
+  Code runs only while the popup is open: a read-only check for playing
+  media when it opens, and volume or pause changes when the user clicks."
 - **remote code**: No, the extension does not use remote code.
 
 ## Data usage (checkboxes)
