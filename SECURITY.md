@@ -50,7 +50,7 @@ JavaScript file with no build step.
   device has its own mic (a USB or Bluetooth headset, an audio interface),
   macOS may show that mic as in use while a slider is below 100%, because
   the device is opened as a whole. Version 0.2.0 could replay that input
-  instead of the app's audio; that's fixed on `main` and in the next release.
+  instead of the app's audio; 0.2.1 fixes that.
 - **No credentials, no personal files, no browsing history.** The extension
   never reads page content either — it only touches media elements' volume
   and play state, and only in response to your clicks.
